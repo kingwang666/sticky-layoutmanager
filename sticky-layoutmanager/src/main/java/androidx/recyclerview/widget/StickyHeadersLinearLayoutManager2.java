@@ -1,16 +1,17 @@
-package com.jay.widget;
+package androidx.recyclerview.widget;
 
 import android.content.Context;
 import android.graphics.PointF;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+
+import com.jay.widget.StickyHeaders;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +24,7 @@ import java.util.List;
  *
  * @link https://github.com/Doist/RecyclerViewExtensions/blob/master/StickyHeaders
  */
-public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & StickyHeaders>
+public class StickyHeadersLinearLayoutManager2<T extends RecyclerView.Adapter & StickyHeaders>
         extends LinearLayoutManager {
     private T mAdapter;
 
@@ -41,11 +42,11 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     private int mPendingScrollPosition = RecyclerView.NO_POSITION;
     private int mPendingScrollOffset = 0;
 
-    public StickyHeadersLinearLayoutManager(Context context) {
+    public StickyHeadersLinearLayoutManager2(Context context) {
         super(context);
     }
 
-    public StickyHeadersLinearLayoutManager(Context context, int orientation, boolean reverseLayout) {
+    public StickyHeadersLinearLayoutManager2(Context context, int orientation, boolean reverseLayout) {
         super(context, orientation, reverseLayout);
     }
 
@@ -269,15 +270,15 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     }
 
     private void detachStickyHeader() {
-        if (mStickyHeader != null) {
-            detachView(mStickyHeader);
-        }
+//        if (mStickyHeader != null) {
+//            detachView(mStickyHeader);
+//        }
     }
 
     private void attachStickyHeader() {
-        if (mStickyHeader != null) {
-            attachView(mStickyHeader);
-        }
+//        if (mStickyHeader != null) {
+//            attachView(mStickyHeader);
+//        }
     }
 
     /**
@@ -364,11 +365,11 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
 
         // Add sticky header as a child view, to be detached / reattached whenever LinearLayoutManager#fill() is called,
         // which happens on layout and scroll (see overrides).
-        addView(stickyHeader);
+        ((ViewGroup)mRecyclerView.getParent()).addView(stickyHeader);
         measureAndLayout(stickyHeader);
 
         // Ignore sticky header, as it's fully managed by this LayoutManager.
-        ignoreView(stickyHeader);
+//        ignoreView(stickyHeader);
 
         mStickyHeader = stickyHeader;
         mStickyHeaderPosition = position;
@@ -433,10 +434,10 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         }
 
         // Stop ignoring sticky header so that it can be recycled.
-        stopIgnoringView(stickyHeader);
+//        stopIgnoringView(stickyHeader);
 
         // Remove and recycle sticky header.
-        removeView(stickyHeader);
+        ((ViewGroup)mRecyclerView.getParent()).removeView(stickyHeader);
         if (recycler != null) {
             recycler.recycleView(stickyHeader);
         }
@@ -736,7 +737,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
             dest.writeInt(pendingScrollOffset);
         }
 
-        public static final Parcelable.Creator<SavedState> CREATOR = new Parcelable.Creator<SavedState>() {
+        public static final Creator<SavedState> CREATOR = new Creator<SavedState>() {
             @Override
             public SavedState createFromParcel(Parcel in) {
                 return new SavedState(in);

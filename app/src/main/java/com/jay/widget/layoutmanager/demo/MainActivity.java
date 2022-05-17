@@ -1,25 +1,27 @@
 package com.jay.widget.layoutmanager.demo;
 
 import android.os.Bundle;
-import android.support.v4.view.ViewCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.StaggeredGridLayoutManager;
+
+import androidx.annotation.NonNull;
+import androidx.core.view.ViewCompat;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+import androidx.recyclerview.widget.StickyHeadersLinearLayoutManager;
+import androidx.recyclerview.widget.StickyHeadersLinearLayoutManager2;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.JsResult;
-import android.webkit.WebChromeClient;
-import android.webkit.WebView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.jay.widget.StickyHeaders;
 import com.jay.widget.StickyHeadersGridLayoutManager;
-import com.jay.widget.StickyHeadersLinearLayoutManager;
 import com.jay.widget.StickyHeadersStaggeredGridLayoutManager;
 
 import java.util.ArrayList;
@@ -41,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
         setLinearLayoutManager();
         mAdapter = new MyAdapter();
         mRecyclerView.setAdapter(mAdapter);
+
+//        mRecyclerView.scrollToPosition(60);
     }
 
 
@@ -70,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
     private void setLinearLayoutManager() {
         StickyHeadersLinearLayoutManager<MyAdapter> layoutManager = new StickyHeadersLinearLayoutManager<>(this);
         mRecyclerView.setLayoutManager(layoutManager);
+//        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
     private void setGridLayoutManager() {
@@ -137,6 +142,12 @@ public class MainActivity extends AppCompatActivity {
         public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             if (viewType == HEADER_ITEM) {
                 View inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.header_item, parent, false);
+                inflate.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Toast.makeText(v.getContext(), "click", Toast.LENGTH_SHORT).show();
+                    }
+                });
                 return new MyViewHolder(inflate);
             } else {
                 View inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item, parent, false);
@@ -186,6 +197,18 @@ public class MainActivity extends AppCompatActivity {
                     p.setFullSpan(true);
                 }
             }
+            Log.d("test aa", ((TextView)holder.itemView).getText().toString());
+        }
+
+        @Override
+        public void onViewDetachedFromWindow(@NonNull MyViewHolder holder) {
+            super.onViewDetachedFromWindow(holder);
+        }
+
+        @Override
+        public void onViewRecycled(@NonNull MyViewHolder holder) {
+            super.onViewRecycled(holder);
+            Log.d("test", ((TextView)holder.itemView).getText().toString());
         }
     }
 
