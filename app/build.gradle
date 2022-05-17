@@ -1,12 +1,19 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
 
 android {
-    compileSdkVersion 32
+
+    compileSdk 32
+
+    namespace 'com.jay.widget.layoutmanager.demo'
 
     defaultConfig {
         applicationId "com.jay.widget.layoutmanager.demo"
-        minSdkVersion 19
-        targetSdkVersion 32
+        minSdk 21
+        targetSdk 32
         versionCode 1
         versionName "1.0"
     }
@@ -22,10 +29,20 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    buildFeatures {
+        viewBinding true
+    }
+
+
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation project(':sticky-layoutmanager')
     implementation 'androidx.recyclerview:recyclerview:1.2.1'

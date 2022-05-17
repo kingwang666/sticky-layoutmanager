@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import androidx.recyclerview.widget.StickyHeadersLinearLayoutManager;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,7 +18,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.recyclerview.widget.StickyHeaders;
+import com.jay.widget.StickyHeaders;
 import androidx.recyclerview.widget.StickyHeadersGridLayoutManager;
 import androidx.recyclerview.widget.StickyHeadersStaggeredGridLayoutManager;
 
@@ -43,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new MyAdapter();
         mRecyclerView.setAdapter(mAdapter);
 
-//        mRecyclerView.scrollToPosition(60);
+        mRecyclerView.scrollToPosition(60);
     }
 
 
@@ -71,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setLinearLayoutManager() {
-        StickyHeadersLinearLayoutManager<MyAdapter> layoutManager = new StickyHeadersLinearLayoutManager<>(this);
+        StickyHeadersLinearLayoutManager layoutManager = new StickyHeadersLinearLayoutManager(this);
         mRecyclerView.setLayoutManager(layoutManager);
 //        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     }

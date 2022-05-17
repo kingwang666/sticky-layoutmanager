@@ -11,17 +11,20 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
+import com.jay.widget.StickyHeaders;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by jay on 2017/12/4 上午10:57
- * <p>
+ *
  * Adds sticky headers capabilities to your {@link RecyclerView.Adapter}. It must implement {@link StickyHeaders} to
  * indicate which items are headers.
  *
  * @link https://github.com/Doist/RecyclerViewExtensions/blob/master/StickyHeaders
+ * @deprecated 还未修改bug
  */
+@Deprecated
 public class StickyHeadersGridLayoutManager<T extends RecyclerView.Adapter & StickyHeaders>
         extends GridLayoutManager {
     private T mAdapter;
