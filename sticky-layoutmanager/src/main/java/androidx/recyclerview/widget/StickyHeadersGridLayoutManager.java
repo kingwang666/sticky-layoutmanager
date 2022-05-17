@@ -1,30 +1,29 @@
-package com.jay.widget;
+package androidx.recyclerview.widget;
 
 import android.content.Context;
 import android.graphics.PointF;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.view.View;
-import android.view.ViewTreeObserver;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+
+import android.util.AttributeSet;
+import android.view.View;
+import android.view.ViewTreeObserver;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by jay on 2017/12/4 上午10:57
- *
+ * <p>
  * Adds sticky headers capabilities to your {@link RecyclerView.Adapter}. It must implement {@link StickyHeaders} to
  * indicate which items are headers.
  *
  * @link https://github.com/Doist/RecyclerViewExtensions/blob/master/StickyHeaders
  */
-public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & StickyHeaders>
-        extends LinearLayoutManager {
+public class StickyHeadersGridLayoutManager<T extends RecyclerView.Adapter & StickyHeaders>
+        extends GridLayoutManager {
     private T mAdapter;
 
     private float mTranslationX;
@@ -41,12 +40,16 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     private int mPendingScrollPosition = RecyclerView.NO_POSITION;
     private int mPendingScrollOffset = 0;
 
-    public StickyHeadersLinearLayoutManager(Context context) {
-        super(context);
+    public StickyHeadersGridLayoutManager(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
     }
 
-    public StickyHeadersLinearLayoutManager(Context context, int orientation, boolean reverseLayout) {
-        super(context, orientation, reverseLayout);
+    public StickyHeadersGridLayoutManager(Context context, int spanCount) {
+        super(context, spanCount);
+    }
+
+    public StickyHeadersGridLayoutManager(Context context, int spanCount, int orientation, boolean reverseLayout) {
+        super(context, spanCount, orientation, reverseLayout);
     }
 
     /**
@@ -357,9 +360,11 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
     private void createStickyHeader(@NonNull RecyclerView.Recycler recycler, int position) {
         View stickyHeader = recycler.getViewForPosition(position);
 
+        RecyclerView.ViewHolder viewHolder = RecyclerView.getChildViewHolderInt(stickyHeader);
+
         // Setup sticky header if the adapter requires it.
-        if (mAdapter instanceof StickyHeaders.ViewSetup) {
-            ((StickyHeaders.ViewSetup) mAdapter).setupStickyHeaderView(stickyHeader);
+        if (viewHolder != null && mAdapter instanceof StickyHeaders.OnViewAttachListener) {
+            ((StickyHeaders.OnViewAttachListener) mAdapter).onStickyHeaderViewAttachedToWindow(viewHolder);
         }
 
         // Add sticky header as a child view, to be detached / reattached whenever LinearLayoutManager#fill() is called,
@@ -423,13 +428,15 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
         mStickyHeader = null;
         mStickyHeaderPosition = RecyclerView.NO_POSITION;
 
+        RecyclerView.ViewHolder viewHolder = RecyclerView.getChildViewHolderInt(stickyHeader);
+
         // Revert translation values.
         stickyHeader.setTranslationX(0);
         stickyHeader.setTranslationY(0);
 
         // Teardown holder if the adapter requires it.
-        if (mAdapter instanceof StickyHeaders.ViewSetup) {
-            ((StickyHeaders.ViewSetup) mAdapter).teardownStickyHeaderView(stickyHeader);
+        if (viewHolder != null && mAdapter instanceof StickyHeaders.OnViewAttachListener) {
+            ((StickyHeaders.OnViewAttachListener) mAdapter).onStickyHeaderViewDetachedFromWindow(viewHolder);
         }
 
         // Stop ignoring sticky header so that it can be recycled.
@@ -736,7 +743,7 @@ public class StickyHeadersLinearLayoutManager<T extends RecyclerView.Adapter & S
             dest.writeInt(pendingScrollOffset);
         }
 
-        public static final Parcelable.Creator<SavedState> CREATOR = new Parcelable.Creator<SavedState>() {
+        public static final Creator<SavedState> CREATOR = new Creator<SavedState>() {
             @Override
             public SavedState createFromParcel(Parcel in) {
                 return new SavedState(in);

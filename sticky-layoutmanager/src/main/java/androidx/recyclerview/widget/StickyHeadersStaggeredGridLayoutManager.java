@@ -4,14 +4,12 @@ import android.content.Context;
 import android.graphics.PointF;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.jay.widget.StickyHeaders;
+import android.util.AttributeSet;
+import android.view.View;
+import android.view.ViewTreeObserver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +22,8 @@ import java.util.List;
  *
  * @link https://github.com/Doist/RecyclerViewExtensions/blob/master/StickyHeaders
  */
-public class StickyHeadersLinearLayoutManager2<T extends RecyclerView.Adapter & StickyHeaders>
-        extends LinearLayoutManager {
+public class StickyHeadersStaggeredGridLayoutManager<T extends RecyclerView.Adapter & StickyHeaders>
+        extends StaggeredGridLayoutManager {
     private T mAdapter;
 
     private float mTranslationX;
@@ -35,6 +33,7 @@ public class StickyHeadersLinearLayoutManager2<T extends RecyclerView.Adapter & 
     private List<Integer> mHeaderPositions = new ArrayList<>(0);
     private RecyclerView.AdapterDataObserver mHeaderPositionsObserver = new HeaderPositionsAdapterDataObserver();
 
+    private static final int INVALID_OFFSET = Integer.MIN_VALUE;
     // Sticky header's ViewHolder and dirty state.
     private View mStickyHeader;
     private int mStickyHeaderPosition = RecyclerView.NO_POSITION;
@@ -42,12 +41,12 @@ public class StickyHeadersLinearLayoutManager2<T extends RecyclerView.Adapter & 
     private int mPendingScrollPosition = RecyclerView.NO_POSITION;
     private int mPendingScrollOffset = 0;
 
-    public StickyHeadersLinearLayoutManager2(Context context) {
-        super(context);
+    public StickyHeadersStaggeredGridLayoutManager(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
     }
 
-    public StickyHeadersLinearLayoutManager2(Context context, int orientation, boolean reverseLayout) {
-        super(context, orientation, reverseLayout);
+    public StickyHeadersStaggeredGridLayoutManager(int spanCount, int orientation) {
+        super(spanCount, orientation);
     }
 
     /**
@@ -270,15 +269,15 @@ public class StickyHeadersLinearLayoutManager2<T extends RecyclerView.Adapter & 
     }
 
     private void detachStickyHeader() {
-//        if (mStickyHeader != null) {
-//            detachView(mStickyHeader);
-//        }
+        if (mStickyHeader != null) {
+            detachView(mStickyHeader);
+        }
     }
 
     private void attachStickyHeader() {
-//        if (mStickyHeader != null) {
-//            attachView(mStickyHeader);
-//        }
+        if (mStickyHeader != null) {
+            attachView(mStickyHeader);
+        }
     }
 
     /**
@@ -358,18 +357,20 @@ public class StickyHeadersLinearLayoutManager2<T extends RecyclerView.Adapter & 
     private void createStickyHeader(@NonNull RecyclerView.Recycler recycler, int position) {
         View stickyHeader = recycler.getViewForPosition(position);
 
+        RecyclerView.ViewHolder viewHolder = RecyclerView.getChildViewHolderInt(stickyHeader);
+
         // Setup sticky header if the adapter requires it.
-        if (mAdapter instanceof StickyHeaders.ViewSetup) {
-            ((StickyHeaders.ViewSetup) mAdapter).setupStickyHeaderView(stickyHeader);
+        if (viewHolder != null && mAdapter instanceof StickyHeaders.OnViewAttachListener) {
+            ((StickyHeaders.OnViewAttachListener) mAdapter).onStickyHeaderViewAttachedToWindow(viewHolder);
         }
 
         // Add sticky header as a child view, to be detached / reattached whenever LinearLayoutManager#fill() is called,
         // which happens on layout and scroll (see overrides).
-        ((ViewGroup)mRecyclerView.getParent()).addView(stickyHeader);
+        addView(stickyHeader);
         measureAndLayout(stickyHeader);
 
         // Ignore sticky header, as it's fully managed by this LayoutManager.
-//        ignoreView(stickyHeader);
+        ignoreView(stickyHeader);
 
         mStickyHeader = stickyHeader;
         mStickyHeaderPosition = position;
@@ -428,16 +429,18 @@ public class StickyHeadersLinearLayoutManager2<T extends RecyclerView.Adapter & 
         stickyHeader.setTranslationX(0);
         stickyHeader.setTranslationY(0);
 
+        RecyclerView.ViewHolder viewHolder = RecyclerView.getChildViewHolderInt(stickyHeader);
+
         // Teardown holder if the adapter requires it.
-        if (mAdapter instanceof StickyHeaders.ViewSetup) {
-            ((StickyHeaders.ViewSetup) mAdapter).teardownStickyHeaderView(stickyHeader);
+        if (viewHolder != null && mAdapter instanceof StickyHeaders.OnViewAttachListener) {
+            ((StickyHeaders.OnViewAttachListener) mAdapter).onStickyHeaderViewDetachedFromWindow(viewHolder);
         }
 
         // Stop ignoring sticky header so that it can be recycled.
-//        stopIgnoringView(stickyHeader);
+        stopIgnoringView(stickyHeader);
 
         // Remove and recycle sticky header.
-        ((ViewGroup)mRecyclerView.getParent()).removeView(stickyHeader);
+        removeView(stickyHeader);
         if (recycler != null) {
             recycler.recycleView(stickyHeader);
         }

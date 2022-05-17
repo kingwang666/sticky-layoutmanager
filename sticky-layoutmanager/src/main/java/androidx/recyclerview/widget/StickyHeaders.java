@@ -1,6 +1,4 @@
-package com.jay.widget;
-
-import android.view.View;
+package androidx.recyclerview.widget;
 
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -16,20 +14,22 @@ public interface StickyHeaders {
 
     boolean isStickyHeader(int position);
 
-    interface ViewSetup {
+    interface OnViewAttachListener {
         /**
          * Adjusts any necessary properties of the {@code holder} that is being used as a sticky header.
          *
-         * {@link #teardownStickyHeaderView(View)} will be called sometime after this method
+         * {@link #onStickyHeaderViewDetachedFromWindow(RecyclerView.ViewHolder)} will be called sometime after this method
          * and before any other calls to this method go through.
+         * @param holder
          */
-        void setupStickyHeaderView(View stickyHeader);
+        void onStickyHeaderViewAttachedToWindow(RecyclerView.ViewHolder holder);
 
         /**
-         * Reverts any properties changed in {@link #setupStickyHeaderView(View)}.
+         * Reverts any properties changed in {@link #onStickyHeaderViewAttachedToWindow(RecyclerView.ViewHolder)}.
          *
-         * Called after {@link #setupStickyHeaderView(View)}.
+         * Called after {@link #onStickyHeaderViewAttachedToWindow(RecyclerView.ViewHolder)}.
+         * @param holder
          */
-        void teardownStickyHeaderView(View stickyHeader);
+        void onStickyHeaderViewDetachedFromWindow(RecyclerView.ViewHolder holder);
     }
 }

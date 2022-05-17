@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import androidx.recyclerview.widget.StickyHeadersLinearLayoutManager;
-import androidx.recyclerview.widget.StickyHeadersLinearLayoutManager2;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,9 +19,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.jay.widget.StickyHeaders;
-import com.jay.widget.StickyHeadersGridLayoutManager;
-import com.jay.widget.StickyHeadersStaggeredGridLayoutManager;
+import androidx.recyclerview.widget.StickyHeaders;
+import androidx.recyclerview.widget.StickyHeadersGridLayoutManager;
+import androidx.recyclerview.widget.StickyHeadersStaggeredGridLayoutManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setLayoutManager(layoutManager);
     }
 
-    static class MyAdapter extends RecyclerView.Adapter<MyViewHolder> implements StickyHeaders, StickyHeaders.ViewSetup {
+    static class MyAdapter extends RecyclerView.Adapter<MyViewHolder> implements StickyHeaders, StickyHeaders.OnViewAttachListener {
 
         private static final String[] DICT = {
                 "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
@@ -178,13 +177,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void setupStickyHeaderView(View stickyHeader) {
-            ViewCompat.setElevation(stickyHeader, 10);
+        public void onStickyHeaderViewAttachedToWindow(RecyclerView.ViewHolder holder) {
+            ViewCompat.setElevation(holder.itemView, 10);
         }
 
         @Override
-        public void teardownStickyHeaderView(View stickyHeader) {
-            ViewCompat.setElevation(stickyHeader, 0);
+        public void onStickyHeaderViewDetachedFromWindow(RecyclerView.ViewHolder holder) {
+            ViewCompat.setElevation(holder.itemView, 0);
         }
 
         @Override
@@ -197,7 +196,6 @@ public class MainActivity extends AppCompatActivity {
                     p.setFullSpan(true);
                 }
             }
-            Log.d("test aa", ((TextView)holder.itemView).getText().toString());
         }
 
         @Override
@@ -208,7 +206,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onViewRecycled(@NonNull MyViewHolder holder) {
             super.onViewRecycled(holder);
-            Log.d("test", ((TextView)holder.itemView).getText().toString());
         }
     }
 
