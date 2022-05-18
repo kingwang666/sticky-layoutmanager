@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import androidx.recyclerview.widget.StickyHeadersLinearLayoutManager;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -177,6 +178,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onStickyHeaderViewAttachedToWindow(RecyclerView.ViewHolder holder) {
+            Log.d("fuck", "fuck");
             ViewCompat.setElevation(holder.itemView, 10);
         }
 

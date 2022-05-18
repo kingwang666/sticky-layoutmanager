@@ -9,9 +9,14 @@ import android.graphics.PointF
 import com.jay.widget.StickyHeaders.OnViewAttachListener
 import android.view.ViewGroup
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
-import android.view.ViewGroup.MarginLayoutParams
 import android.os.Parcel
+import android.util.Log
 import android.view.View
+import androidx.core.view.marginBottom
+import androidx.core.view.marginEnd
+import androidx.core.view.marginStart
+import androidx.core.view.marginTop
+import java.lang.Exception
 import java.util.ArrayList
 
 /**
@@ -23,7 +28,7 @@ import java.util.ArrayList
  */
 class StickyHeadersLinearLayoutManager : LinearLayoutManager {
 
-    private var mAdapter: RecyclerView.Adapter<*>?= null
+    private var mAdapter: RecyclerView.Adapter<*>? = null
 
     private var mTranslationX = 0f
     private var mTranslationY = 0f
@@ -351,18 +356,24 @@ class StickyHeadersLinearLayoutManager : LinearLayoutManager {
                 }
             }
             if (anchorView != null && anchorPos != -1) {
-                val headerIndex = findHeaderIndexOrBefore(anchorPos)
+                var headerIndex = findHeaderIndexOrBefore(anchorPos)
+
+                val isViewOnBoundary = isViewOnBoundary(anchorView)
+
+                if (headerIndex > 0 && !isViewOnBoundary && isViewMarginOnBoundary(anchorView)) {
+                    headerIndex--
+                }
+
                 val headerPos = if (headerIndex != -1) mHeaderPositions[headerIndex] else -1
                 val nextHeaderPos =
                     if (headerCount > headerIndex + 1) mHeaderPositions[headerIndex + 1] else -1
+
 
                 // Show sticky header if:
                 // - There's one to show;
                 // - It's on the edge or it's not the anchor view;
                 // - Isn't followed by another sticky header;
-                if (headerPos != -1 && (headerPos != anchorPos || isViewOnBoundary(anchorView))
-                    && nextHeaderPos != headerPos + 1
-                ) {
+                if (headerPos != -1 && (headerPos != anchorPos || isViewOnBoundary) && nextHeaderPos != headerPos + 1) {
                     var stickyHeader = mStickyHeader
                     // Ensure existing sticky header, if any, is of correct type.
                     if (stickyHeader != null
@@ -390,8 +401,8 @@ class StickyHeadersLinearLayoutManager : LinearLayoutManager {
                             nextHeaderView = null
                         }
                     }
-                    stickyHeader.translationX = getX(mStickyHeader, nextHeaderView)
-                    stickyHeader.translationY = getY(mStickyHeader, nextHeaderView)
+                    stickyHeader.translationX = getX(stickyHeader, nextHeaderView)
+                    stickyHeader.translationY = getY(stickyHeader, nextHeaderView)
                     return
                 }
             }
@@ -421,7 +432,9 @@ class StickyHeadersLinearLayoutManager : LinearLayoutManager {
             mAddToParent = true
             parent.addStickyHeader(stickyHeader)
             if (viewHolder != null) {
-                (mAdapter as? RecyclerView.Adapter<RecyclerView.ViewHolder>)?.onViewAttachedToWindow(viewHolder)
+                (mAdapter as? RecyclerView.Adapter<RecyclerView.ViewHolder>)?.onViewAttachedToWindow(
+                    viewHolder
+                )
             }
             measureAndLayout(stickyHeader)
         } else {
@@ -450,13 +463,14 @@ class StickyHeadersLinearLayoutManager : LinearLayoutManager {
      */
     private fun bindStickyHeader(recycler: Recycler, position: Int) {
         // Bind the sticky header.
-        recycler.bindViewToPosition(mStickyHeader!!, position)
+        val stickyHeader = mStickyHeader ?: return
+        recycler.bindViewToPosition(stickyHeader, position)
         mStickyHeaderPosition = position
-        measureAndLayout(mStickyHeader)
+        measureAndLayout(stickyHeader)
 
         // If we have a pending scroll wait until the end of layout and scroll again.
         if (mPendingScrollPosition != RecyclerView.NO_POSITION) {
-            val vto = mStickyHeader?.viewTreeObserver
+            val vto = stickyHeader.viewTreeObserver
 
             vto?.addOnGlobalLayoutListener(object : OnGlobalLayoutListener {
 
@@ -476,12 +490,24 @@ class StickyHeadersLinearLayoutManager : LinearLayoutManager {
     /**
      * Measures and lays out `stickyHeader`.
      */
-    private fun measureAndLayout(stickyHeader: View?) {
-        measureChildWithMargins(stickyHeader!!, 0, 0)
+    private fun measureAndLayout(stickyHeader: View) {
+        measureChildWithMargins(stickyHeader, 0, 0)
         if (orientation == VERTICAL) {
-            stickyHeader.layout(paddingLeft, 0, width - paddingRight, stickyHeader.measuredHeight)
+            val shouldPadding = getShouldPaddingTop()
+            stickyHeader.layout(
+                paddingStart,
+                shouldPadding,
+                width - paddingEnd,
+                stickyHeader.measuredHeight + shouldPadding
+            )
         } else {
-            stickyHeader.layout(0, paddingTop, stickyHeader.measuredWidth, height - paddingBottom)
+            val shouldPadding = getShouldPaddingStart()
+            stickyHeader.layout(
+                shouldPadding,
+                paddingTop,
+                stickyHeader.measuredWidth + shouldPadding,
+                height - paddingBottom
+            )
         }
     }
 
@@ -493,6 +519,7 @@ class StickyHeadersLinearLayoutManager : LinearLayoutManager {
      */
     @Suppress("UNCHECKED_CAST")
     private fun scrapStickyHeader(recycler: Recycler?) {
+        Log.d("fuck", "", Exception("12"))
         val stickyHeader = mStickyHeader ?: return
         mStickyHeader = null
         mStickyHeaderPosition = RecyclerView.NO_POSITION
@@ -512,7 +539,9 @@ class StickyHeadersLinearLayoutManager : LinearLayoutManager {
                 parent.removeStickyHeader(stickyHeader)
             }
             if (viewHolder != null) {
-                (mAdapter as? RecyclerView.Adapter<RecyclerView.ViewHolder>)?.onViewAttachedToWindow(viewHolder)
+                (mAdapter as? RecyclerView.Adapter<RecyclerView.ViewHolder>)?.onViewAttachedToWindow(
+                    viewHolder
+                )
             }
         } else {
             // Stop ignoring sticky header so that it can be recycled.
@@ -532,19 +561,56 @@ class StickyHeadersLinearLayoutManager : LinearLayoutManager {
         return if (!params.isItemRemoved && !params.isViewInvalid) {
             if (orientation == VERTICAL) {
                 if (reverseLayout) {
-                    view.top + view.translationY <= height + mTranslationY
+                    view.top + view.translationY <= height + mTranslationY + getShouldPaddingBottom()
                 } else {
-                    view.bottom - view.translationY >= mTranslationY
+                    view.bottom - view.translationY >= mTranslationY + getShouldPaddingTop()
                 }
             } else {
                 if (reverseLayout) {
-                    view.left + view.translationX <= width + mTranslationX
+                    view.left + view.translationX <= width + mTranslationX + getShouldPaddingEnd()
                 } else {
-                    view.right - view.translationX >= mTranslationX
+                    view.right - view.translationX >= mTranslationX + getShouldPaddingStart()
                 }
             }
         } else {
             false
+        }
+    }
+
+    private fun isClipPadding(): Boolean {
+        return mRecyclerView?.clipToPadding ?: false
+    }
+
+    private fun getShouldPaddingStart(): Int {
+        return if (isClipPadding()) {
+            paddingStart
+        } else {
+            0
+        }
+    }
+
+    private fun getShouldPaddingTop(): Int {
+        return if (isClipPadding()) {
+            paddingTop
+        } else {
+            0
+        }
+    }
+
+
+    private fun getShouldPaddingEnd(): Int {
+        return if (isClipPadding()) {
+            paddingEnd
+        } else {
+            0
+        }
+    }
+
+    private fun getShouldPaddingBottom(): Int {
+        return if (isClipPadding()) {
+            paddingBottom
+        } else {
+            0
         }
     }
 
@@ -554,15 +620,47 @@ class StickyHeadersLinearLayoutManager : LinearLayoutManager {
     private fun isViewOnBoundary(view: View): Boolean {
         return if (orientation == VERTICAL) {
             if (reverseLayout) {
-                view.bottom - view.translationY > height + mTranslationY
+                view.bottom - view.translationY > height + mTranslationY + getShouldPaddingBottom()
             } else {
-                view.top + view.translationY < mTranslationY
+                view.top + view.translationY < mTranslationY + getShouldPaddingTop()
             }
         } else {
             if (reverseLayout) {
-                view.right - view.translationX > width + mTranslationX
+                view.right - view.translationX > width + mTranslationX + getShouldPaddingEnd()
             } else {
-                view.left + view.translationX < mTranslationX
+                view.left + view.translationX < mTranslationX + getShouldPaddingStart()
+            }
+        }
+    }
+
+    private fun isViewMarginOnBoundary(view: View): Boolean {
+        return if (orientation == VERTICAL) {
+            if (reverseLayout) {
+                val margin = view.marginBottom
+                if (margin == 0){
+                    return false
+                }
+                view.bottom - view.translationY >= height + mTranslationY + getShouldPaddingBottom() + margin
+            } else {
+                val margin = view.marginTop
+                if (margin == 0){
+                    return false
+                }
+                view.top + view.translationY <= mTranslationY + getShouldPaddingTop() + margin
+            }
+        } else {
+            if (reverseLayout) {
+                val margin = view.marginEnd
+                if (margin == 0){
+                    return false
+                }
+                view.right - view.translationX >= width + mTranslationX + getShouldPaddingEnd() + margin
+            } else {
+                val margin = view.marginStart
+                if (margin == 0){
+                    return false
+                }
+                view.left + view.translationX <= mTranslationX + getShouldPaddingStart() + margin
             }
         }
     }
@@ -571,62 +669,43 @@ class StickyHeadersLinearLayoutManager : LinearLayoutManager {
      * Returns the position in the Y axis to position the header appropriately, depending on orientation, direction and
      * [android.R.attr.clipToPadding].
      */
-    private fun getY(headerView: View?, nextHeaderView: View?): Float {
-        return if (orientation == VERTICAL) {
-            var y = mTranslationY
+    private fun getY(headerView: View, nextHeaderView: View?): Float {
+        var y = mTranslationY
+        if (orientation == VERTICAL) {
             if (reverseLayout) {
-                y += (height - headerView!!.height).toFloat()
+                y += (height - headerView.height).toFloat()
             }
             if (nextHeaderView != null) {
                 if (reverseLayout) {
-                    var bottomMargin = 0
-                    if (nextHeaderView.layoutParams is MarginLayoutParams) {
-                        bottomMargin =
-                            (nextHeaderView.layoutParams as MarginLayoutParams).bottomMargin
-                    }
-                    y = Math.max((nextHeaderView.bottom + bottomMargin).toFloat(), y)
+                    y = Math.max(nextHeaderView.bottom.toFloat(), y)
                 } else {
-                    var topMargin = 0
-                    if (nextHeaderView.layoutParams is MarginLayoutParams) {
-                        topMargin = (nextHeaderView.layoutParams as MarginLayoutParams).topMargin
-                    }
                     y = Math.min(
-                        (nextHeaderView.top - topMargin - headerView!!.height).toFloat(),
+                        (nextHeaderView.top - headerView.bottom).toFloat(),
                         y
                     )
                 }
             }
-            y
-        } else {
-            mTranslationY
         }
+        return y
     }
 
     /**
      * Returns the position in the X axis to position the header appropriately, depending on orientation, direction and
      * [android.R.attr.clipToPadding].
      */
-    private fun getX(headerView: View?, nextHeaderView: View?): Float {
+    private fun getX(headerView: View, nextHeaderView: View?): Float {
         return if (orientation != VERTICAL) {
             var x = mTranslationX
             if (reverseLayout) {
-                x += (width - headerView!!.width).toFloat()
+                x += (width - headerView.width).toFloat()
             }
             if (nextHeaderView != null) {
                 if (reverseLayout) {
-                    var rightMargin = 0
-                    if (nextHeaderView.layoutParams is MarginLayoutParams) {
-                        rightMargin =
-                            (nextHeaderView.layoutParams as MarginLayoutParams).rightMargin
-                    }
-                    x = Math.max((nextHeaderView.right + rightMargin).toFloat(), x)
+
+                    x = Math.max(nextHeaderView.right.toFloat(), x)
                 } else {
-                    var leftMargin = 0
-                    if (nextHeaderView.layoutParams is MarginLayoutParams) {
-                        leftMargin = (nextHeaderView.layoutParams as MarginLayoutParams).leftMargin
-                    }
                     x = Math.min(
-                        (nextHeaderView.left - leftMargin - headerView!!.width).toFloat(),
+                        (nextHeaderView.left - headerView.width).toFloat(),
                         x
                     )
                 }
