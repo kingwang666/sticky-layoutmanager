@@ -437,6 +437,9 @@ class StickyHeadersLinearLayoutManager : LinearLayoutManager {
                 )
             }
             measureAndLayout(stickyHeader)
+            // Ignore sticky header, as it's fully managed by this LayoutManager.
+            viewHolder.addFlags(RecyclerView.ViewHolder.FLAG_IGNORE)
+            mRecyclerView.mViewInfoStore.removeViewHolder(viewHolder)
         } else {
             mAddToParent = false
             addView(stickyHeader)
@@ -533,6 +536,8 @@ class StickyHeadersLinearLayoutManager : LinearLayoutManager {
         if (viewHolder != null && mAdapter is OnViewAttachListener) {
             (mAdapter as OnViewAttachListener).onStickyHeaderViewDetachedFromWindow(viewHolder)
         }
+        // Stop ignoring sticky header so that it can be recycled.
+        stopIgnoringView(stickyHeader)
         if (mAddToParent) {
             val parent = mRecyclerView.parent as ViewGroup
             if (parent is StickyParentLayout) {
@@ -544,9 +549,6 @@ class StickyHeadersLinearLayoutManager : LinearLayoutManager {
                 )
             }
         } else {
-            // Stop ignoring sticky header so that it can be recycled.
-            stopIgnoringView(stickyHeader)
-
             // Remove and recycle sticky header.
             removeView(stickyHeader)
         }
