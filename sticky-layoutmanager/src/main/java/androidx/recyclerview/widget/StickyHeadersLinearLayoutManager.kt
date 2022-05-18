@@ -522,7 +522,6 @@ class StickyHeadersLinearLayoutManager : LinearLayoutManager {
      */
     @Suppress("UNCHECKED_CAST")
     private fun scrapStickyHeader(recycler: Recycler?) {
-        Log.d("fuck", "", Exception("12"))
         val stickyHeader = mStickyHeader ?: return
         mStickyHeader = null
         mStickyHeaderPosition = RecyclerView.NO_POSITION

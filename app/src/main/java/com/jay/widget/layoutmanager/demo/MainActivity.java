@@ -178,7 +178,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onStickyHeaderViewAttachedToWindow(RecyclerView.ViewHolder holder) {
-            Log.d("fuck", "fuck");
             ViewCompat.setElevation(holder.itemView, 10);
         }
 

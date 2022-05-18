@@ -51,11 +51,12 @@ class StickyParentLayout : ViewGroup {
             return
         }
         val child = getChildAt(0)
-        child.layout(l + paddingStart, t + paddingTop, r, b)
+        child.layout(paddingStart, paddingTop, paddingStart + child.measuredWidth, paddingTop + child.measuredHeight)
     }
 
     internal fun addStickyHeader(view: View) {
         addViewInLayout(view, -1, view.layoutParams)
+        invalidate()
     }
 
     override fun dispatchDraw(canvas: Canvas) {
@@ -78,12 +79,14 @@ class StickyParentLayout : ViewGroup {
 
     internal fun removeStickyHeader(view: View) {
         removeViewInLayout(view)
+        invalidate()
     }
 
     internal fun removeStickyHeaders() {
         val count = childCount - 1
         if (count > 0) {
             removeViewsInLayout(1, count)
+            invalidate()
         }
     }
 }
